@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Codon to Amino Acid Converter</title>
+
+<style>
+	* {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+	}
+	
+	body, html {
+		font-family: sans-serif;
+		background-color: #0a0a0a;
+		color: #fefefe;
+	}
+	
+	.container {
+		margin: 50px auto;
+		max-width: 640px;
+		height: 100%;
+		padding: 0 20px;
+	}
+	
+	textarea {
+		padding: 10px;
+		width: 100%;
+		min-height: 200px;
+		margin-bottom: 40px;
+		background-color: #202020;
+		color: #fefefe;
+	}
+	
+	label {
+		display: block;
+		margin: 10px 0;
+	}
+	
+	button {
+		border: 0;
+		background-color: #b4e61a;
+		padding: 10px 20px;
+		border-radius: 2px;
+		cursor: pointer;
+		color: #243c24;
+	}
+	
+	.align-right {
+		text-align: right;
+	}
+	
+	#alert {
+		background-color: #ffdb5a;
+		border-radius: 2px;
+		color: #7e2424;
+		padding: 10px 15px;
+		margin: 30px 0;
+	}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+	<h1>Codon to Amino Acid Converter</h1>
+	<div id="alert">
+		<strong>Warning:</strong>
+		<span id="alert-content"></span>
+	</div>
+	<form>
+		<label for="codons">Codons:</label>
+		<textarea id="codons"></textarea>
+		<label for="aas">Amino Acids:</label>
+		<textarea id="aas" readonly></textarea>
+		<div class="align-right">
+			<button id="btn-convert" type="button">Convert to Amino Acid</button>
+		</div>
+	</form>
+</div>
+
+<script>
+	var aminoAcidInfo = [
+		{
+			"name": "alanine",
+			"abbr": "ala",
+			"letter": "a",
+			"codons": ["gct", "gcc", "gca", "gcg"] 
+		},
+		{
+			"name": "cysteine",
+			"abbr": "cys",
+			"letter": "c",
+			"codons": ["tgt", "tgc"] 
+		},
+		{
+			"name": "aspartic acid",
+			"abbr": "asp",
+			"letter": "d",
+			"codons": ["gat", "gac"] 
+		},
+		{
+			"name": "glutamic acid",
+			"abbr": "glu",
+			"letter": "e",
+			"codons": ["gaa", "gag"] 
+		},
+		{
+			"name": "phenylalanine",
+			"abbr": "phe",
+			"letter": "f",
+			"codons": ["ttt", "ttc"] 
+		},
+		{
+			"name": "glycine",
+			"abbr": "gly",
+			"letter": "g",
+			"codons": ["ggt", "ggc", "gga", "ggg"] 
+		},
+		{
+			"name": "histidine",
+			"abbr": "his",
+			"letter": "h",
+			"codons": ["cat", "cac"] 
+		},
+		{
+			"name": "isoleucine",
+			"abbr": "ile",
+			"letter": "i",
+			"codons": ["att", "atc", "ata"] 
+		},
+		{
+			"name": "lysine",
+			"abbr": "lys",
+			"letter": "k",
+			"codons": ["aaa", "aag"] 
+		},
+		{
+			"name": "leucine",
+			"abbr": "leu",
+			"letter": "l",
+			"codons": ["tta", "ttg", "ctt", "ctc", "cta", "ctg"] 
+		},
+		{
+			"name": "methionine",
+			"abbr": "met",
+			"letter": "m",
+			"codons": ["atg"] 
+		},
+		{
+			"name": "asparagine",
+			"abbr": "asn",
+			"letter": "n",
+			"codons": ["aat", "aac"] 
+		},
+		{
+			"name": "proline",
+			"abbr": "pro",
+			"letter": "p",
+			"codons": ["cct", "ccc", "cca", "ccg"] 
+		},
+		{
+			"name": "glutamine",
+			"abbr": "gln",
+			"letter": "q",
+			"codons": ["caa", "cag"] 
+		},
+		{
+			"name": "arginine",
+			"abbr": "arg",
+			"letter": "r",
+			"codons": ["cgt", "cgc", "cga", "cgg", "aga", "agg"] 
+		},
+		{
+			"name": "serine",
+			"abbr": "ser",
+			"letter": "s",
+			"codons": ["tct", "tcc", "tca", "tcg", "agt", "agc"] 
+		},
+		{
+			"name": "threonine",
+			"abbr": "thr",
+			"letter": "t",
+			"codons": ["act", "acc", "aca", "acg"] 
+		},
+		{
+			"name": "valine",
+			"abbr": "val",
+			"letter": "v",
+			"codons": ["gtt", "gtc", "gta", "gtg"] 
+		},
+		{
+			"name": "tryptophan",
+			"abbr": "trp",
+			"letter": "w",
+			"codons": ["tgg"]
+		},
+		{
+			"name": "tyrosine",
+			"abbr": "tyr",
+			"letter": "y",
+			"codons": ["tat", "tac"]
+		},
+		{
+			"name": "stop codon",
+			"abbr": "/",
+			"letter": "-",
+			"codons": ["taa", "tag", "tga"]
+		},
+	]
+
+	var codonTextArea = document.getElementById("codons");
+	var convertButton = document.getElementById("btn-convert");
+	var resultTextArea = document.getElementById("aas");
+	var alertContent = document.getElementById("alert-content");
+	var alert = document.getElementById("alert");
+	
+	alert.style.visibility = "hidden";
+	
+	convertButton.addEventListener("click", function() {
+		var sequence = codonTextArea.value.toLowerCase();
+		var excessBases = sequence.length % 3;
+		var alertMessage = "";
+		var aminoAcids = "";
+		
+		alert.style.visibility = "hidden";
+		
+		if (excessBases > 0) {
+			alertMessage = excessBases + " extra base(s) trimmed.";
+			alertContent.innerHTML = alertMessage;
+			sequence = sequence.substr(0, sequence.length-1-excessBases);
+		}
+		
+		for(i=0; i<sequence.length; i+=3) {
+			var codon = sequence[i] + sequence[i+1] + sequence[i+2];
+			for(j=0; j<aminoAcidInfo.length; j++) {
+				if (aminoAcidInfo[j].codons.indexOf(codon) != -1) {
+					aminoAcids += aminoAcidInfo[j].letter;
+					continue;
+				}
+			}
+		}
+		
+		if(alertMessage != "") {
+			alert.style.visibility = "visible";
+		}
+		
+		resultTextArea.value = aminoAcids;
+	});
+</script>
+
+</body>
+</html>
